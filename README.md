@@ -1,4 +1,4 @@
 MY499
 =====
 
-Code and datasets for the dissertation project 'British Far Right Parties on Social Networks'
+Code and data sets for the dissertation project 'British Far Right Parties on Social Networks'
