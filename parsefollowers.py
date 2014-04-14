@@ -12,21 +12,45 @@ def parse_followers_ids(appapi, accountname, outputcsv):
                 csvwriter.writerow([str(follower)])
             time.sleep(60)
 
-def parse_followers(api, accountname, partyname, outputcsv):
-    with open(outputcsv, "w") as f:
-        csvwriter = csv.writer(f)
-        csvwriter.writerow(['id', 'name', partyname, 'lang', 'timezone', 'location', 'geo', 'tweets', 'following', 'followers', 'protected', 'created'])
-        for follower in tweepy.Cursor(api.followers, id=accountname, count=100).items():
-            csvwriter.writerow([follower.id] + [follower.name] + ['True'] + [follower.lang] + 
-                               [follower.time_zone] + [follower.location] + [follower.geo_enabled] + 
-                               [follower.statuses_count] + [follower.friends_count] + [follower.followers_count]
-                               + [follower.protected] + [datetime.strftime(follower.created_at, "%d/%m/%Y")])
-                               
-            time.sleep(3)
+def parse_followers_metadata(appapi, inputcsv, outputcsv):
+    with open(inputcsv, "r") as f:
+        with open(outputcsv, 'w') as f2:
+            csvreader = csv.reader(f)
+            csvwriter = csv.writer(f2)
+            lines = list(csvreader)
+            title = lines[0]
+            title.extend(['name', 'protected', 'created', 'lang', 'timezone', 'location', 'geo', 'tweets', 'following', 'followers'])
+            csvwriter.writerow(title)
+            
+            for i in xrange(1,len(lines),100):
+                chunk = lines[i:i+100]
+                ids = [int(i[1]) for i in chunk]
+                users = appapi.lookup_users(user_ids=ids)
+                uids = [user.id for user in users]
+                diff = [i for i in ids if i not in uids]
+                idiff = []
+                for i in diff:
+                    idiff.extend([ids.index(i)])
+                for i in idiff:
+                    users.insert(i, None)
+                metadata = []
+                for user in users:
+                    if user:
+                        metadata.append([user.name] + [user.protected] + [datetime.strftime(user.created_at, "%d/%m/%Y")] +
+                                        [user.lang] + [user.time_zone] + [user.location] + [user.geo_enabled] +
+                                        [user.statuses_count] + [user.friends_count] + [user.followers_count])
+                    else:
+                        metadata.append([None] * 10)
+                extchunk = map(list.__add__, chunk, metadata)
+                for line in extchunk:
+                    csvwriter.writerow(line)
+                time.sleep(60)
 
 api = create_api()
-parse_followers_ids(api, 'bnp', './data/bnpids_02042014.csv')
-parse_followers_ids(api, 'ukip', './data/ukipids_02042014.csv')
-parse_followers_ids(api, 'LibDems', './data/libdemids_02042014.csv')
-parse_followers_ids(api, 'Conservatives', './data/consids_02042014.csv')
-parse_followers_ids(api, 'UKLabour', './data/labids_02042014.csv')
+#parse_followers_ids(api, 'bnp', './data/bnpids_10042014.csv')
+#parse_followers_ids(api, 'ukip', './data/ukipids_10042014.csv')
+#parse_followers_ids(api, 'LibDems', './data/libdemids_10042014.csv')
+#parse_followers_ids(api, 'Conservatives', './data/consids_10042014.csv')
+#parse_followers_ids(api, 'UKLabour', './data/labids_10042014.csv')
+
+#parse_followers_metadata(api, './data/followers_ids_02042014.csv', './data/followers_metadata_02042014.csv')
