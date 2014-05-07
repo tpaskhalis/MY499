@@ -18,9 +18,9 @@ def parse_followers_metadata(appapi, inputcsv, outputcsv):
             csvreader = csv.reader(f)
             csvwriter = csv.writer(f2)
             lines = list(csvreader)
-            title = lines[0]
-            title.extend(['name', 'protected', 'created', 'lang', 'timezone', 'location', 'geo', 'tweets', 'following', 'followers'])
-            csvwriter.writerow(title)
+            header = lines[0]
+            header.extend(['name', 'protected', 'created', 'lang', 'timezone', 'location', 'geo', 'tweets', 'following', 'followers'])
+            csvwriter.writerow(header)
             
             for i in xrange(1,len(lines),100):
                 chunk = lines[i:i+100]
@@ -46,11 +46,32 @@ def parse_followers_metadata(appapi, inputcsv, outputcsv):
                     csvwriter.writerow(line)
                 time.sleep(60)
 
+def parse_followers_friends(appapi, inputcsv, outputcsv):
+    with open(inputcsv, "r") as f:
+        with open(outputcsv, 'w') as f2:
+            csvreader = csv.reader(f)
+            csvwriter = csv.writer(f2)
+            header = next(csvreader)
+            csvwriter.writerow(header)
+            for line in csvreader:
+                friends = []
+                try:
+                    for page in tweepy.Cursor(appapi.friends_ids, id=line[0], count=5000).pages():
+                        for friend in page:
+                            friends.extend([str(friend)])
+                        time.sleep(60)
+                    line.extend(friends)
+                    csvwriter.writerow(line)
+                except tweepy.error.TweepError:
+                    time.sleep(60)
+
 api = create_api()
-#parse_followers_ids(api, 'bnp', './data/bnpids_10042014.csv')
-#parse_followers_ids(api, 'ukip', './data/ukipids_10042014.csv')
-#parse_followers_ids(api, 'LibDems', './data/libdemids_10042014.csv')
-#parse_followers_ids(api, 'Conservatives', './data/consids_10042014.csv')
-#parse_followers_ids(api, 'UKLabour', './data/labids_10042014.csv')
+#parse_followers_ids(api, 'bnp', './data/17042014/bnpids_17042014.csv')
+#parse_followers_ids(api, 'ukip', './data/17042014/ukipids_17042014.csv')
+#parse_followers_ids(api, 'LibDems', './data/17042014/libdemids_17042014.csv')
+#parse_followers_ids(api, 'Conservatives', './data/17042014/consids_17042014.csv')
+#parse_followers_ids(api, 'UKLabour', './data/17042014/labids_17042014.csv')
 
 #parse_followers_metadata(api, './data/followers_ids_02042014.csv', './data/followers_metadata_02042014.csv')
+
+#parse_followers_friends(api, './data/sample.csv', './data/sample_friends.csv')
