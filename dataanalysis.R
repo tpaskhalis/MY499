@@ -627,3 +627,15 @@ fit.friends.df$id <- rownames(fit.friends.df)
 rownames(fit.friends.df) <- NULL
 fit.friends.df <- fit.friends.df[order(fit.friends.df$coefficient),]
 print(xtable(fit.friends.df), include.rownames=FALSE)
+
+##########################################################################
+#Dataset anonymisation
+##########################################################################
+
+simple_metadata <- read.csv("./data/anonymised/simple_metadata.csv")
+simple_metadata$id <- c(1:dim(simple_metadata)[1])
+write.csv(simple_metadata, "./data/anonymised/simple_metadata.csv", row.names = FALSE)
+
+complete_samples <- read.csv("./data/anonymised/complete_samples.csv") 
+complete_samples$id <- c(1:dim(complete_samples)[1])
+write.csv(complete_samples, "./data/anonymised/complete_samples.csv", row.names = FALSE)
